@@ -1,0 +1,56 @@
+---
+import type { PortableTextTextBlock } from '@portabletext/types';
+
+interface Visa {
+  countryName: string;
+  visaName: string;
+  slug: { current: string };
+  latitude: number;
+  longitude: number;
+}
+
+interface Props {
+  visas: Visa[];
+}
+
+const { visas } = Astro.props;
+---
+
+<div id="map" style="height: 400px; width: 100%; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIINfQPDSAaeHRXchofDo6F/o/fGss+sBlA="
+  crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/4K+fdIsJt+LuiDerTU4="
+  crossorigin=""></script>
+
+<script type="module">
+  // Ensure Leaflet is loaded before trying to use it
+  if (typeof L !== 'undefined' ) {
+    const map = L.map('map').setView([20, 0], 2); // Centered globally, zoom level 2
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    } ).addTo(map);
+
+    const visas = JSON.parse(document.getElementById('visa-data').textContent);
+
+    visas.forEach(visa => {
+      if (visa.latitude && visa.longitude) {
+        const marker = L.marker([visa.latitude, visa.longitude]).addTo(map);
+        marker.bindPopup(`
+          <b>${visa.countryName}</b><br>
+          ${visa.visaName}<br>
+          <a href="/${visa.slug.current}">View Details</a>
+        `);
+      }
+    });
+  }
+</script>
+
+<!-- Hidden script tag to pass data from Astro to client-side JS -->
+<script id="visa-data" type="application/json" is:inline>
+  {JSON.stringify(visas)}
+</script>
+

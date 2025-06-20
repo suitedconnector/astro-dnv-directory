@@ -1,0 +1,97 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { client, toHtml } from '../lib/sanity';
+
+export async function getStaticPaths() {
+  const slugs = await client.fetch(`*[_type == "digitalNomadVisa"].slug.current`);
+  return slugs.map(slug => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const query = `*[_type == "digitalNomadVisa" && slug.current == "${slug}"][0]{
+  countryName,
+  visaName,
+  minMonthlyIncome,
+  fullEligibility,
+  applicationProcess,
+  officialLink,
+  visaDuration,
+  pathToResidency,
+  latitude,
+  longitude
+}`;
+const visa = await client.fetch(query);
+
+if (!visa) {
+  return Astro.redirect('/404'); // Or handle error
+}
+---
+
+<Layout title={`${visa.countryName} Digital Nomad Visa`}>
+  <main class="container mx-auto p-4">
+    <a href="/" class="text-blue-600 hover:underline mb-4 block">&larr; Back to Directory</a>
+    <h1 class="text-4xl font-bold my-8">{visa.countryName} - {visa.visaName}</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="md:col-span-1">
+        <h2 class="text-2xl font-semibold mb-4">Key Information</h2>
+        <ul class="space-y-2 text-gray-700">
+          <li><strong>Minimum Monthly Income:</strong> €{visa.minMonthlyIncome.toLocaleString()}</li>
+          <li><strong>Visa Duration:</strong> {visa.visaDuration}</li>
+          <li><strong>Path to Residency:</strong> {visa.pathToResidency ? 'Yes' : 'No'}</li>
+          {visa.officialLink && (
+            <li>
+              <strong>Official Link:</strong> <a href={visa.officialLink} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">View Official Page</a>
+            </li>
+          )}
+        </ul>
+
+        <h2 class="text-2xl font-semibold mt-8 mb-4">Full Eligibility Details</h2>
+        <div class="prose max-w-none" set:html={toHtml(visa.fullEligibility)} />
+
+      </div>
+
+      <div class="md:col-span-1">
+        <h2 class="text-2xl font-semibold mb-4">Application Process Overview</h2>
+        <div class="prose max-w-none" set:html={toHtml(visa.applicationProcess)} />
+
+        <section class="mt-8 p-6 bg-blue-50 rounded-lg shadow-md">
+          <h3 class="text-xl font-semibold text-blue-800 mb-3">Important Disclaimer</h3>
+          <p class="text-blue-700 text-sm">
+            This information is for general guidance only and does not constitute legal advice. Visa requirements can change rapidly. For personalized and up-to-date advice, it is highly recommended to consult with a qualified immigration legal professional specializing in {visa.countryName} digital nomad visas.
+          </p>
+          <!-- Placeholder for future attorney contact form -->
+          <p class="mt-4 text-blue-600">Contact details for legal professionals coming soon!</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style is:global>
+  /* Basic Prose styles for rich text from Sanity */
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  .prose p {
+    margin-bottom: 1em;
+  }
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+  .prose li {
+    margin-bottom: 0.5em;
+  }
+  /* Inherit other styles from index.astro */
+</style>
+
+
