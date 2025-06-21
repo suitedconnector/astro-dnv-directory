@@ -5,10 +5,23 @@ Scrapes official government sources for digital nomad visa information
 """
 
 import asyncio
-import json
-import re
 from crawl4ai import AsyncWebCrawler
-from crawl4ai.extraction_strategy import LLMExtractionStrategy
+from datetime import datetime
+
+async def main():
+    urls = [
+        "https://example.com",
+        # Add more URLs here
+    ]
+    async with AsyncWebCrawler() as crawler:
+        for url in urls:
+            result = await crawler.arun(url)
+            print(f"\n# {url}\n")
+            print(result.markdown[:500])  # Print first 500 chars
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
 from datetime import datetime
 
 class VisaScraper:
